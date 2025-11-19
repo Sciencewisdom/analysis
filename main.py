@@ -1,6 +1,7 @@
 """
-健康数据分析工具 - tkinter GUI 主程序
-UI与逻辑完全分离，所有分析由 analysis_backend 完成
+CSV数据分析工具 - tkinter GUI 主程序
+通用数据分析与可视化工具，UI与逻辑完全分离
+所有分析由 analysis_backend 完成
 """
 
 import tkinter as tk
@@ -36,7 +37,7 @@ setup_matplotlib_fonts()
 
 
 class App:
-    """健康数据分析应用主类"""
+    """CSV数据分析应用主类"""
     
     def __init__(self, root):
         """
@@ -46,7 +47,7 @@ class App:
             root: tkinter根窗口
         """
         self.root = root
-        self.root.title("健康数据分析工具")
+        self.root.title("CSV数据分析工具 v1.1")
         self.root.geometry("1200x800")
         
         # 初始化后端
