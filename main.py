@@ -126,7 +126,7 @@ class App:
         
         cont_header = ttk.Frame(left_frame)
         cont_header.pack(fill=tk.X, anchor=tk.W, pady=(15, 0))
-        ttk.Label(cont_header, text="连续型变量 (Y轴/数值):", font=("微软雅黑", 10, "bold")).pack(side=tk.LEFT)
+        ttk.Label(cont_header, text="连续型变量 (Ctrl多选):", font=("微软雅黑", 10, "bold")).pack(side=tk.LEFT)
         ttk.Button(cont_header, text="✕", width=3, command=self._clear_cont_selection).pack(side=tk.RIGHT)
         
         cont_scrollbar = ttk.Scrollbar(left_frame)
@@ -137,7 +137,7 @@ class App:
             height=10,
             width=25,
             yscrollcommand=cont_scrollbar.set,
-            selectmode=tk.SINGLE,
+            selectmode=tk.EXTENDED,  # 多选模式，支持配对t检验等需要选择两个变量的场景
             exportselection=False,
             font=("微软雅黑", 9)
         )
@@ -180,82 +180,96 @@ class App:
         result_scrollbar.config(command=self.text_output.yview)
         
         # ========== 底部框 (Frame 4): 分析操作按钮 ==========
-        button_frame = ttk.LabelFrame(self.root, text="分析操作", padding=10)
-        button_frame.pack(fill=tk.X, padx=5, pady=5)
+        button_container = ttk.Frame(self.root)
+        button_container.pack(fill=tk.X, padx=5, pady=5)
         
-        # 第一行按钮
-        row1 = ttk.Frame(button_frame)
-        row1.pack(fill=tk.X, pady=5)
+        # ===== 第一行：可视化图表 + 描述统计 =====
+        vis_row = ttk.Frame(button_container)
+        vis_row.pack(fill=tk.X, pady=2)
         
-        ttk.Button(
-            row1,
-            text="📊 直方图 (选Y)",
-            command=self._draw_histogram
-        ).pack(side=tk.LEFT, padx=5)
+        # 📊 可视化图表
+        vis_frame = ttk.LabelFrame(vis_row, text="📊 可视化图表", padding=5)
+        vis_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        ttk.Button(
-            row1,
-            text="📈 Q-Q图 (选Y)",
-            command=self._draw_qq
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(vis_frame, text="直方图", command=self._draw_histogram, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="折线图", command=self._draw_line, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="柱状图", command=self._draw_bar, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="饼图", command=self._draw_pie, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="箱线图", command=self._draw_boxplot, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="小提琴图", command=self._draw_violin, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="Q-Q图", command=self._draw_qq, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="散点图", command=self._draw_scatter, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(vis_frame, text="热力图", command=self._draw_correlation_heatmap, width=10).pack(side=tk.LEFT, padx=2)
         
-        ttk.Button(
-            row1,
-            text="📦 箱线图 (选X、Y)",
-            command=self._draw_boxplot
-        ).pack(side=tk.LEFT, padx=5)
+        # ===== 第二行：参数检验 + 非参数检验 =====
+        test_row = ttk.Frame(button_container)
+        test_row.pack(fill=tk.X, pady=2)
         
-        ttk.Button(
-            row1,
-            text="🎻 小提琴图 (选X、Y)",
-            command=self._draw_violin
-        ).pack(side=tk.LEFT, padx=5)
+        # 🔬 参数检验
+        param_frame = ttk.LabelFrame(test_row, text="🔬 参数检验", padding=5)
+        param_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        ttk.Button(
-            row1,
-            text="📉 折线图 (选Y)",
-            command=self._draw_line
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(param_frame, text="正态性检验", command=self._run_normality_test, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(param_frame, text="独立t检验", command=self._run_t_test, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(param_frame, text="配对t检验", command=self._run_paired_t_test, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(param_frame, text="ANOVA", command=self._run_anova, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(param_frame, text="线性回归", command=self._run_linear_regression, width=12).pack(side=tk.LEFT, padx=2)
         
-        # 第二行按钮
-        row2 = ttk.Frame(button_frame)
-        row2.pack(fill=tk.X, pady=5)
+        # 📉 非参数检验
+        nonparam_frame = ttk.LabelFrame(test_row, text="📉 非参数检验", padding=5)
+        nonparam_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        ttk.Button(
-            row2,
-            text="📊 柱状图 (选X或Y)",
-            command=self._draw_bar
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(nonparam_frame, text="卡方检验", command=self._run_chi_square, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(nonparam_frame, text="Mann-Whitney", command=self._run_mann_whitney, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(nonparam_frame, text="Kruskal-Wallis", command=self._run_kruskal_wallis, width=12).pack(side=tk.LEFT, padx=2)
         
-        ttk.Button(
-            row2,
-            text="🥧 饼图 (选X)",
-            command=self._draw_pie
-        ).pack(side=tk.LEFT, padx=5)
+        # ===== 第三行：数据分析 + 导出操作 =====
+        data_row = ttk.Frame(button_container)
+        data_row.pack(fill=tk.X, pady=2)
         
-        ttk.Button(
-            row2,
-            text="📋 描述统计 (选Y)",
-            command=self._show_descriptive_stats
-        ).pack(side=tk.LEFT, padx=5)
+        # 📋 数据分析
+        data_frame = ttk.LabelFrame(data_row, text="📋 数据分析", padding=5)
+        data_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        ttk.Button(
-            row2,
-            text="🔬 t检验 (选X、Y)",
-            command=self._run_t_test
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(data_frame, text="描述统计", command=self._show_descriptive_stats, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(data_frame, text="批量统计", command=self._show_all_stats, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(data_frame, text="相关性分析", command=self._show_correlation_analysis, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(data_frame, text="缺失值分析", command=self._show_missing_analysis, width=12).pack(side=tk.LEFT, padx=2)
         
-        ttk.Button(
-            row2,
-            text="💾 保存图形",
-            command=self._save_plot
-        ).pack(side=tk.LEFT, padx=5)
+        # 💾 导出操作
+        export_frame = ttk.LabelFrame(data_row, text="💾 导出操作", padding=5)
+        export_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        ttk.Button(
-            row2,
-            text="❌ 清空结果",
-            command=self._clear_output
-        ).pack(side=tk.LEFT, padx=5)
+        ttk.Button(export_frame, text="保存图形", command=self._save_plot, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(export_frame, text="导出Excel", command=self._export_to_excel, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(export_frame, text="清空结果", command=self._clear_output, width=12).pack(side=tk.LEFT, padx=2)
+        
+        # ===== 第四行：高级分析 =====
+        adv_row = ttk.Frame(button_container)
+        adv_row.pack(fill=tk.X, pady=2)
+        
+        # 🚀 高级可视化
+        adv_vis_frame = ttk.LabelFrame(adv_row, text="🚀 高级可视化", padding=5)
+        adv_vis_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        ttk.Button(adv_vis_frame, text="3D散点图", command=self._draw_3d_scatter, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="3D曲面图", command=self._draw_3d_surface, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="3D散点(Web)", command=self._draw_3d_scatter_plotly, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="3D曲面(Web)", command=self._draw_3d_surface_plotly, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="配对图", command=self._draw_pair_grid, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="雷达图", command=self._draw_radar, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(adv_vis_frame, text="分布对比", command=self._draw_distribution_comparison, width=10).pack(side=tk.LEFT, padx=2)
+        
+        # 🧠 机器学习
+        ml_frame = ttk.LabelFrame(adv_row, text="🧠 机器学习", padding=5)
+        ml_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        
+        ttk.Button(ml_frame, text="PCA 2D", command=self._draw_pca_2d, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(ml_frame, text="PCA 3D", command=self._draw_pca_3d, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(ml_frame, text="PCA分析", command=self._show_pca_analysis, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(ml_frame, text="K-Means", command=self._draw_kmeans, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(ml_frame, text="聚类分析", command=self._show_cluster_analysis, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(ml_frame, text="树状图", command=self._draw_dendrogram, width=10).pack(side=tk.LEFT, padx=2)
     
     def _on_cat_select(self, event):
         """分类变量选择时的回调"""
@@ -553,6 +567,291 @@ class App:
         except Exception as e:
             messagebox.showerror("错误", f"检验失败: {str(e)}")
     
+    # ==================== 新增学术分析功能 ====================
+    
+    def _draw_correlation_heatmap(self):
+        """绘制相关性热力图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        if len(self.backend.continuous_cols) < 2:
+            messagebox.showwarning("警告", "至少需要2个连续变量")
+            return
+        
+        try:
+            fig = self.backend.plot_correlation_heatmap()
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绘制失败: {str(e)}")
+    
+    
+    def _draw_scatter(self):
+        """绘制散点图 - 需要选择两个连续变量"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 尝试获取连续变量列表中的选择
+        cont_sel = self.cont_listbox.curselection()
+        
+        if len(cont_sel) < 2:
+            # 如果选择不足2个，弹出对话框让用户选择
+            if len(self.backend.continuous_cols) < 2:
+                messagebox.showwarning("警告", "至少需要2个连续变量")
+                return
+            
+            # 使用前两个连续变量作为默认
+            x_col = self.backend.continuous_cols[0]
+            y_col = self.backend.continuous_cols[1]
+            messagebox.showinfo("提示", f"使用默认变量:\nX: {x_col}\nY: {y_col}\n\n提示: 可按Ctrl键多选两个连续变量")
+        else:
+            x_col = self.cont_listbox.get(cont_sel[0])
+            y_col = self.cont_listbox.get(cont_sel[1])
+        
+        try:
+            fig = self.backend.plot_scatter(x_col, y_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绘制失败: {str(e)}")
+    
+    
+    def _run_linear_regression(self):
+        """执行线性回归"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cont_sel = self.cont_listbox.curselection()
+        
+        if len(cont_sel) < 2:
+            if len(self.backend.continuous_cols) < 2:
+                messagebox.showwarning("警告", "至少需要2个连续变量")
+                return
+            x_col = self.backend.continuous_cols[0]
+            y_col = self.backend.continuous_cols[1]
+            messagebox.showinfo("提示", f"使用默认变量:\nX(自变量): {x_col}\nY(因变量): {y_col}")
+        else:
+            x_col = self.cont_listbox.get(cont_sel[0])
+            y_col = self.cont_listbox.get(cont_sel[1])
+        
+        try:
+            result = self.backend.linear_regression(x_col, y_col)
+            self._display_text_result(result)
+            
+            # 同时绘制散点图
+            fig = self.backend.plot_scatter(x_col, y_col, add_regression=True)
+            self._embed_figure(fig, self.plot_frame)
+        except Exception as e:
+            messagebox.showerror("错误", f"分析失败: {str(e)}")
+    
+    
+    def _run_anova(self):
+        """执行单因素方差分析"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cat_sel = self.cat_listbox.curselection()
+        cont_sel = self.cont_listbox.curselection()
+        
+        if not cat_sel:
+            messagebox.showwarning("警告", "请在左侧选择分类变量(分组因素)")
+            return
+        if not cont_sel:
+            messagebox.showwarning("警告", "请在右侧选择连续变量(因变量)")
+            return
+        
+        cat_col = self.cat_listbox.get(cat_sel[0])
+        cont_col = self.cont_listbox.get(cont_sel[0])
+        
+        try:
+            result = self.backend.one_way_anova(cat_col, cont_col)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"分析失败: {str(e)}")
+    
+    
+    def _run_chi_square(self):
+        """执行卡方检验"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cat_sel = self.cat_listbox.curselection()
+        
+        if len(cat_sel) < 2:
+            if len(self.backend.categorical_cols) < 2:
+                messagebox.showwarning("警告", "至少需要2个分类变量")
+                return
+            col1 = self.backend.categorical_cols[0]
+            col2 = self.backend.categorical_cols[1] if len(self.backend.categorical_cols) > 1 else self.backend.continuous_cols[0]
+            messagebox.showinfo("提示", f"使用默认变量:\n变量1: {col1}\n变量2: {col2}")
+        else:
+            col1 = self.cat_listbox.get(cat_sel[0])
+            col2 = self.cat_listbox.get(cat_sel[1])
+        
+        try:
+            result = self.backend.chi_square_test(col1, col2)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"检验失败: {str(e)}")
+    
+    
+    def _run_normality_test(self):
+        """执行正态性检验"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cont_sel = self.cont_listbox.curselection()
+        if not cont_sel:
+            messagebox.showwarning("警告", "请在右侧选择一个连续变量")
+            return
+        
+        column = self.cont_listbox.get(cont_sel[0])
+        
+        try:
+            result = self.backend.normality_test(column)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"检验失败: {str(e)}")
+    
+    
+    def _run_paired_t_test(self):
+        """执行配对t检验"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cont_sel = self.cont_listbox.curselection()
+        
+        if len(cont_sel) < 2:
+            messagebox.showwarning("警告", "请按Ctrl键选择两个连续变量(前测/后测)")
+            return
+        
+        col1 = self.cont_listbox.get(cont_sel[0])
+        col2 = self.cont_listbox.get(cont_sel[1])
+        
+        try:
+            result = self.backend.paired_t_test(col1, col2)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"检验失败: {str(e)}")
+    
+    
+    def _run_mann_whitney(self):
+        """执行Mann-Whitney U检验"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cat_sel = self.cat_listbox.curselection()
+        cont_sel = self.cont_listbox.curselection()
+        
+        if not cat_sel:
+            messagebox.showwarning("警告", "请在左侧选择分类变量(二分类)")
+            return
+        if not cont_sel:
+            messagebox.showwarning("警告", "请在右侧选择连续变量")
+            return
+        
+        cat_col = self.cat_listbox.get(cat_sel[0])
+        cont_col = self.cont_listbox.get(cont_sel[0])
+        
+        try:
+            result = self.backend.mann_whitney_test(cat_col, cont_col)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"检验失败: {str(e)}")
+    
+    
+    def _run_kruskal_wallis(self):
+        """执行Kruskal-Wallis检验"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cat_sel = self.cat_listbox.curselection()
+        cont_sel = self.cont_listbox.curselection()
+        
+        if not cat_sel:
+            messagebox.showwarning("警告", "请在左侧选择分类变量")
+            return
+        if not cont_sel:
+            messagebox.showwarning("警告", "请在右侧选择连续变量")
+            return
+        
+        cat_col = self.cat_listbox.get(cat_sel[0])
+        cont_col = self.cont_listbox.get(cont_sel[0])
+        
+        try:
+            result = self.backend.kruskal_wallis_test(cat_col, cont_col)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"检验失败: {str(e)}")
+    
+    
+    def _show_all_stats(self):
+        """显示所有变量的批量描述统计"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        try:
+            result = self.backend.get_all_descriptive_stats()
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"计算失败: {str(e)}")
+    
+    
+    def _show_missing_analysis(self):
+        """显示缺失值分析"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        try:
+            result = self.backend.missing_value_analysis()
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"分析失败: {str(e)}")
+    
+    
+    def _export_to_excel(self):
+        """导出统计结果到Excel"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Excel文件", "*.xlsx"), ("CSV文件", "*.csv"), ("所有文件", "*.*")],
+            initialdir=self.last_dir
+        )
+        
+        if filepath:
+            try:
+                result = self.backend.export_statistics_to_excel(filepath)
+                messagebox.showinfo("导出结果", result)
+            except Exception as e:
+                messagebox.showerror("错误", f"导出失败: {str(e)}")
+    
+    
+    def _show_correlation_analysis(self):
+        """显示相关性分析文本结果"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        try:
+            result = self.backend.get_correlation_analysis()
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"分析失败: {str(e)}")
+    
     
     def _embed_figure(self, fig, frame):
         """
@@ -565,6 +864,14 @@ class App:
         # 清除旧的canvas
         for widget in frame.winfo_children():
             widget.destroy()
+        
+        # 限制图形最大尺寸，避免撑爆界面
+        fig_width, fig_height = fig.get_size_inches()
+        max_height = 6  # 最大高度6英寸
+        if fig_height > max_height:
+            scale = max_height / fig_height
+            fig.set_size_inches(fig_width * scale, max_height)
+            fig.tight_layout()
         
         # 创建新的canvas并绘制
         canvas = FigureCanvasTkAgg(fig, master=frame)
@@ -609,6 +916,282 @@ class App:
         self.text_output.config(state=tk.NORMAL)
         self.text_output.delete(1.0, tk.END)
         self.text_output.config(state=tk.DISABLED)
+
+    # ==================== 高级分析功能 ====================
+    
+    def _draw_3d_scatter(self):
+        """绘制3D散点图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        selections = self.cont_listbox.curselection()
+        if len(selections) < 3:
+            messagebox.showwarning("提示", 
+                "请在左侧【连续型变量】列表中选择3个变量作为X/Y/Z轴\n\n"
+                "多选方法：\n"
+                "• 按住 Ctrl 点击多个变量\n"
+                "• 或按住 Shift 选择连续范围\n\n"
+                f"当前已选: {len(selections)} 个，还需选择 {3-len(selections)} 个")
+            return
+        
+        x_col = self.cont_listbox.get(selections[0])
+        y_col = self.cont_listbox.get(selections[1])
+        z_col = self.cont_listbox.get(selections[2])
+        
+        # 获取可选的分组变量
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_3d_scatter(x_col, y_col, z_col, hue_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
+    
+    def _draw_3d_surface(self):
+        """绘制3D曲面图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        selections = self.cont_listbox.curselection()
+        if len(selections) < 3:
+            messagebox.showwarning("提示", 
+                "请在左侧【连续型变量】列表中选择3个变量作为X/Y/Z轴\n\n"
+                "多选方法：\n"
+                "• 按住 Ctrl 点击多个变量\n"
+                "• 或按住 Shift 选择连续范围\n\n"
+                f"当前已选: {len(selections)} 个，还需选择 {3-len(selections)} 个")
+            return
+        
+        x_col = self.cont_listbox.get(selections[0])
+        y_col = self.cont_listbox.get(selections[1])
+        z_col = self.cont_listbox.get(selections[2])
+        
+        try:
+            fig = self.backend.plot_3d_surface(x_col, y_col, z_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
+
+    def _draw_3d_scatter_plotly(self):
+        """绘制3D散点图 (Web/GPU)"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        selections = self.cont_listbox.curselection()
+        if len(selections) < 3:
+            messagebox.showwarning("提示", "请选择3个连续变量作为X/Y/Z轴 (按住Ctrl多选)")
+            return
+        
+        x_col = self.cont_listbox.get(selections[0])
+        y_col = self.cont_listbox.get(selections[1])
+        z_col = self.cont_listbox.get(selections[2])
+        
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            filename = self.backend.plot_3d_scatter_plotly(x_col, y_col, z_col, hue_col)
+            self.status_var.set(f"已在浏览器中打开: {filename}")
+        except Exception as e:
+            messagebox.showerror("错误", f"生成失败: {str(e)}")
+
+    def _draw_3d_surface_plotly(self):
+        """绘制3D曲面图 (Web/GPU)"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        selections = self.cont_listbox.curselection()
+        if len(selections) < 3:
+            messagebox.showwarning("提示", "请选择3个连续变量作为X/Y/Z轴 (按住Ctrl多选)")
+            return
+        
+        x_col = self.cont_listbox.get(selections[0])
+        y_col = self.cont_listbox.get(selections[1])
+        z_col = self.cont_listbox.get(selections[2])
+        
+        try:
+            filename = self.backend.plot_3d_surface_plotly(x_col, y_col, z_col)
+            self.status_var.set(f"已在浏览器中打开: {filename}")
+        except Exception as e:
+            messagebox.showerror("错误", f"生成失败: {str(e)}")
+    
+    def _draw_pair_grid(self):
+        """绘制配对图矩阵"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 获取选中的连续变量
+        cont_selections = self.cont_listbox.curselection()
+        if len(cont_selections) >= 2:
+            columns = [self.cont_listbox.get(i) for i in cont_selections]
+        else:
+            messagebox.showwarning("警告", "请选择至少2个连续变量进行配对分析\n（按住Ctrl多选）")
+            return
+        
+        # 获取可选的分组变量
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_pair_grid(columns=columns, hue_col=hue_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
+    
+    def _draw_radar(self):
+        """绘制雷达图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 获取可选的分组变量
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_radar_chart(group_col=hue_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
+    
+    def _draw_distribution_comparison(self):
+        """绘制分布对比图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        cat_selection = self.cat_listbox.curselection()
+        cont_selection = self.cont_listbox.curselection()
+        
+        if not cat_selection or not cont_selection:
+            messagebox.showwarning("警告", "请选择一个分类变量(X)和一个连续变量(Y)")
+            return
+        
+        group_col = self.cat_listbox.get(cat_selection[0])
+        value_col = self.cont_listbox.get(cont_selection[0])
+        
+        try:
+            fig = self.backend.plot_distribution_comparison(value_col, group_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
+    
+    def _draw_pca_2d(self):
+        """绘制PCA 2D图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 获取可选的分组变量
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_pca_2d(hue_col=hue_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"PCA分析失败: {str(e)}")
+    
+    def _draw_pca_3d(self):
+        """绘制PCA 3D图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 获取可选的分组变量
+        cat_selection = self.cat_listbox.curselection()
+        hue_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_pca_3d(hue_col=hue_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"PCA分析失败: {str(e)}")
+    
+    def _show_pca_analysis(self):
+        """显示PCA分析详细结果"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        try:
+            result = self.backend.get_pca_analysis()
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"PCA分析失败: {str(e)}")
+    
+    def _draw_kmeans(self):
+        """绘制K-Means聚类图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 弹出对话框选择聚类数
+        from tkinter import simpledialog
+        n_clusters = simpledialog.askinteger("K-Means聚类", "请输入聚类数K:", 
+                                              initialvalue=3, minvalue=2, maxvalue=10)
+        if n_clusters is None:
+            return
+        
+        try:
+            fig = self.backend.plot_kmeans_cluster(n_clusters=n_clusters)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+        except Exception as e:
+            messagebox.showerror("错误", f"聚类分析失败: {str(e)}")
+    
+    def _show_cluster_analysis(self):
+        """显示聚类分析详细结果"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        from tkinter import simpledialog
+        n_clusters = simpledialog.askinteger("聚类分析", "请输入聚类数K:", 
+                                              initialvalue=3, minvalue=2, maxvalue=10)
+        if n_clusters is None:
+            return
+        
+        try:
+            result = self.backend.get_cluster_analysis(n_clusters=n_clusters)
+            self._display_text_result(result)
+        except Exception as e:
+            messagebox.showerror("错误", f"聚类分析失败: {str(e)}")
+    
+    def _draw_dendrogram(self):
+        """绘制层次聚类树状图"""
+        if self.backend.df is None:
+            messagebox.showwarning("警告", "请先加载数据")
+            return
+        
+        # 获取可选的标签变量（分类变量）
+        cat_selection = self.cat_listbox.curselection()
+        label_col = self.cat_listbox.get(cat_selection[0]) if cat_selection else None
+        
+        try:
+            fig = self.backend.plot_dendrogram(label_col=label_col)
+            self._embed_figure(fig, self.plot_frame)
+            self.notebook.select(0)
+            
+            if label_col:
+                self.status_var.set(f"树状图已生成，标签: {label_col}")
+            else:
+                self.status_var.set("树状图已生成（选择分类变量X可显示标签）")
+        except Exception as e:
+            messagebox.showerror("错误", f"绑制失败: {str(e)}")
 
 
 def main():

@@ -1,6 +1,6 @@
-# CSV数据分析工具 v1.1
+# CSV数据分析工具 v1.2
 
-一个基于 Tkinter 的通用CSV数据分析工具，采用**严格的架构分离**设计，支持各类数据的统计分析与可视化。
+一个基于 Tkinter 的通用CSV数据分析工具，采用**严格的架构分离**设计，支持各类数据的统计分析与可视化。**v1.2 版本新增完整的学术统计分析功能套件**。
 
 ## 🎯 核心特性
 
@@ -14,6 +14,29 @@
 - **小提琴图** (Violin Plot): 显示分布的详细形状
 - **描述性统计**: 计数、最小值、最大值、均值、中位数、标准差、四分位数等
 - **t检验** (t-test): 独立样本t检验，判断两组是否有显著差异
+
+### 🆕 v1.2 学术分析功能 (NEW!)
+- **相关性热力图**: Pearson相关系数矩阵可视化
+- **散点图+回归线**: 支持分组着色，可选线性回归拟合
+- **线性回归分析**: 返回斜率、截距、R²、p值
+- **单因素ANOVA**: 多组均值比较，F统计量和p值
+- **卡方检验**: 分类变量独立性检验，含列联表
+- **正态性检验**: Shapiro-Wilk检验
+- **配对t检验**: 配对样本均值比较
+- **Mann-Whitney U检验**: 非参数两组比较
+- **Kruskal-Wallis检验**: 非参数多组比较
+- **批量描述统计**: 一键导出所有连续变量统计量
+- **缺失值分析**: 查看各列缺失情况
+- **导出Excel**: 将统计结果导出为Excel文件
+
+### 🚀 高级可视化与机器学习 (NEW!)
+- **3D 散点图**: 三维空间探索变量关系 (Matplotlib & Plotly GPU加速版)
+- **3D 曲面图**: 数据趋势面拟合 (Matplotlib & Plotly GPU加速版)
+- **配对图 (Pair Plot)**: 多变量矩阵散点图
+- **雷达图**: 多维数据综合对比
+- **PCA 分析**: 主成分分析 (2D/3D) 降维可视化
+- **K-Means 聚类**: 无监督学习分组
+- **树状图**: 层次聚类分析
 
 ### 🏗️ 优秀的架构设计
 - **UI 与逻辑完全分离**: GUI 仅负责显示，所有分析由后端完成
@@ -48,7 +71,7 @@ pip install -r requirements.txt
 ### 方法 2: 手动安装
 
 ```bash
-pip install pandas numpy matplotlib seaborn scipy
+pip install pandas numpy matplotlib seaborn scipy openpyxl scikit-learn plotly
 ```
 
 ## 🚀 快速开始
@@ -81,6 +104,7 @@ python main.py
 - **📉 折线图**: 展示数据趋势变化
 - **📈 Q-Q图**: 检验正态性
 - **📋 描述统计**: 查看计数、最小值、最大值、均值、中位数、标准差等
+- **📐 正态性检验** (NEW): Shapiro-Wilk正态性检验
 
 #### 分类变量专用 (选择X)
 - **📊 柱状图**: 各类别频数统计
@@ -90,6 +114,20 @@ python main.py
 - **📦 箱线图**: 按分类变量分组显示连续变量
 - **🎻 小提琴图**: 更详细的分组分布展示
 - **🔬 t检验**: 判断两组的差异是否显著 (p < 0.05)
+- **📊 ANOVA** (NEW): 多组均值比较
+- **🔢 卡方检验** (NEW): 分类变量独立性检验
+- **📉 Mann-Whitney** (NEW): 非参数两组比较
+- **📈 Kruskal-Wallis** (NEW): 非参数多组比较
+
+#### 多变量分析 (选择多个Y)
+- **🔥 相关性热力图** (NEW): 所有连续变量的Pearson相关系数矩阵
+- **📍 散点图** (NEW): 两个连续变量关系，可选回归线
+- **👥 配对t检验** (NEW): 选择两个连续变量进行配对比较
+
+#### 批量分析 (无需选择)
+- **📋 批量统计** (NEW): 所有连续变量的描述统计汇总
+- **❓ 缺失值分析** (NEW): 查看各列缺失情况
+- **📤 导出Excel** (NEW): 将所有统计结果导出为Excel文件
 
 ### 第4步: 导出结果
 - **💾 保存图形**: 将当前图形保存为 PNG 或 PDF
@@ -139,16 +177,38 @@ class App:
 ### analysis_backend.py (分析层)
 ```python
 class DataAnalyzer:
-    - load_data()           # 加载CSV，自动检测变量类型
-    - get_descriptive_stats() # 描述统计（最小值、最大值、均值等）
-    - plot_histogram()      # 绘制直方图
-    - plot_bar()            # 绘制柱状图（智能区分连续/分类变量）
-    - plot_line()           # 绘制折线图
-    - plot_pie()            # 绘制饼图
-    - plot_boxplot()        # 绘制箱线图
-    - plot_qq()             # 绘制Q-Q图
-    - plot_violin()         # 绘制小提琴图
-    - run_t_test()          # 独立样本t检验
+    # 数据处理
+    - load_data()               # 加载CSV，自动检测变量类型
+    - get_descriptive_stats()   # 单变量描述统计
+    - get_all_descriptive_stats() # 批量描述统计
+    - missing_value_analysis()  # 缺失值分析
+    - export_statistics_to_excel() # 导出Excel
+    
+    # 基础绑图
+    - plot_histogram()          # 直方图
+    - plot_bar()               # 柱状图
+    - plot_line()              # 折线图
+    - plot_pie()               # 饼图
+    - plot_boxplot()           # 箱线图
+    - plot_qq()                # Q-Q图
+    - plot_violin()            # 小提琴图
+    
+    # 高级绑图
+    - plot_correlation_heatmap() # 相关性热力图
+    - plot_scatter()           # 散点图+回归线
+    
+    # 统计检验
+    - run_t_test()             # 独立样本t检验
+    - one_way_anova()          # 单因素ANOVA
+    - chi_square_test()        # 卡方检验
+    - normality_test()         # 正态性检验
+    - paired_t_test()          # 配对t检验
+    - mann_whitney_test()      # Mann-Whitney U检验
+    - kruskal_wallis_test()    # Kruskal-Wallis检验
+    
+    # 回归分析
+    - correlation_matrix()     # 相关性矩阵
+    - linear_regression()      # 线性回归
 ```
 
 ## 💡 设计优势
@@ -216,6 +276,22 @@ def run_anova(self, group_col, value_col):
 
 ## 📝 更新日志
 
+### v1.2 (2025-01-XX) - 学术分析完整版
+- ✅ 新增相关性热力图（Pearson相关系数矩阵可视化）
+- ✅ 新增散点图（支持分组着色、线性回归拟合）
+- ✅ 新增线性回归分析（返回斜率、截距、R²、p值）
+- ✅ 新增单因素ANOVA（多组均值比较）
+- ✅ 新增卡方检验（分类变量独立性检验）
+- ✅ 新增正态性检验（Shapiro-Wilk检验）
+- ✅ 新增配对t检验（配对样本均值比较）
+- ✅ 新增Mann-Whitney U检验（非参数两组比较）
+- ✅ 新增Kruskal-Wallis检验（非参数多组比较）
+- ✅ 新增批量描述统计（一键导出所有连续变量统计量）
+- ✅ 新增缺失值分析（查看各列缺失情况）
+- ✅ 新增导出Excel功能（将统计结果导出为Excel文件）
+- ✅ 连续变量列表支持多选（配对t检验、散点图等需要）
+- ✅ 新增openpyxl依赖（Excel导出支持）
+
 ### v1.1 (2025-11-19)
 - ✅ 新增折线图、柱状图、饼图
 - ✅ 新增描述统计（包含最小值、最大值、均值等完整统计量）
@@ -239,7 +315,7 @@ def run_anova(self, group_col, value_col):
 
 **项目**: CSV数据分析工具  
 **用途**: Python课程设计 / 通用数据分析 / 科研可视化  
-**版本**: 1.1
+**版本**: 1.2
 
 ## 📜 许可
 
@@ -247,17 +323,21 @@ def run_anova(self, group_col, value_col):
 
 ## 🤝 贡献与反馈
 
-欢迎提出改进建议！常见改进方向:
-- [x] 柱状图 (已完成)
-- [x] 折线图 (已完成)
-- [x] 饼图 (已完成)
-- [x] 完整描述统计 (已完成)
-- [ ] ANOVA (多组检验)
-- [ ] 相关性分析 (Pearson/Spearman)
-- [ ] 散点图与回归线
-- [ ] 热力图 (Heatmap)
-- [ ] 配对t检验
-- [ ] 非参数检验 (Mann-Whitney U)
+欢迎提出改进建议！功能完成情况:
+- [x] 柱状图 ✅
+- [x] 折线图 ✅
+- [x] 饼图 ✅
+- [x] 完整描述统计 ✅
+- [x] ANOVA (多组检验) ✅
+- [x] 相关性分析 (Pearson) ✅
+- [x] 散点图与回归线 ✅
+- [x] 热力图 (Heatmap) ✅
+- [x] 配对t检验 ✅
+- [x] 非参数检验 (Mann-Whitney U, Kruskal-Wallis) ✅
+- [x] 卡方检验 ✅
+- [x] 正态性检验 ✅
+- [x] 缺失值分析 ✅
+- [x] Excel导出 ✅
 
 ---
 
